@@ -1,0 +1,150 @@
+---
+title: "HW2-Q2"
+author: "Xiao Cui"
+date: "2018/2/7"
+output:
+  pdf_document: default
+  html_document: default
+  documentclass: article
+fontsize: 11pt
+---
+####Q2 a
+```{r, echo = FALSE,warning = FALSE}
+####Q2 a
+
+x2 <- c(3.91,4.85,2.28,4.06,3.70,4.04,5.46,3.53,2.28,1.96,
+        2.53,3.88,2.22,3.47,4.82,2.46,2.99,2.54,0.52)
+log_likelihood <- function(theta){
+  ##l(theta) function of this distribution
+  n2 <- length(x2)
+  -n2 * log(2*pi) + sum(log(1-(cos(x2-theta))))
+}
+
+theta2 <- seq(-pi,pi,length.out = 1000)
+log.likelihood <- array()
+
+for (i in 1:length(theta2)){
+  log.likelihood[i] <- log_likelihood(theta2[i])
+}
+
+##Graph the log-likelihood function
+plot(theta2,log.likelihood,type = 'l',
+     main = 'Log-likelihood function',
+     xlab = 'Theta', ylab = 'Value of log-likelihood')
+
+```
+
+####Q2 b
+$$E[x|\theta]=\int_{0}^{2\pi}x\frac{1-cos(x-\theta)}{2\pi}$$ $$E[x|\theta]=\frac{1}{2\pi}[\int_0^{2\pi}xdx-\int_0^{2\pi}xcos(x-\theta)dx)]$$ $$E[x|\theta]=\pi-\frac{1}{2\pi}(xsin(x-\theta)+cos(x-\theta))|0^{2\pi}$$ $$E[x|\hat{\theta}{moment}]=\pi+sin(\hat{\theta}{moment})$$ To solve for $\theta$ is equivalent to find a numerical solution to $\pi+sin(\hat{\theta}{moment})-\bar{x} = 0$. 
+
+```{r, echo = FALSE,warning = FALSE}
+
+##Define the theta moment
+moment <-function(theta,SM){
+  ## It can be deducted the theta moment by distribution function
+  pi+sin(theta)-SM
+}
+
+##Get the root of the moment
+print(root1<-uniroot(moment,c(0,pi/2),SM=mean(x2))$root)
+
+print(root2<-uniroot(moment,c(pi/2,pi),SM=mean(x2))$root)
+```
+
+####Q2 c
+```{r, echo = FALSE,warning = FALSE}
+####Q2 c
+
+##Define the fucntion similar as that in Q1
+optim_general2<-function(initial){
+  g <- function(theta){
+    n2 <- length(x2)
+    n2*log(2*pi)-sum(log(1-cos(x2-theta)))  
+  }
+  gr.g <- function(theta){
+    
+    sum((sin(x2-theta))/(1-cos(x2-theta)))
+  }
+  hess.g <- function(theta){
+    
+    tt <- -sum(1/(cos(x2-theta)-1))
+    return(matrix(tt,nrow=1))
+  }
+  zz<-nlminb(initial, g, gr.g, hess.g)
+}
+
+##use Moment as starting point
+list(optim_general2(root1)$par,optim_general2(root2)$par)
+
+```
+
+
+####Q2 d
+```{r, echo = FALSE,warning = FALSE}
+####Q2 d
+
+##Use -2.7 and 2.7 as starting point
+list(optim_general2(-2.7)$par,optim_general2(2.7)$par)
+```
+
+
+####Q2 e
+```{r, echo = FALSE,warning = FALSE}
+####Q2 e
+starting.value <- seq(-pi,pi,length.out = 200)
+Repeat.200 <- array()
+for (i in 1:length(starting.value)){
+  Repeat.200[i] <- optim_general2(starting.value[i])
+}
+
+##plot the distribution of different groups of MLE
+plot(starting.value,Repeat.200,main='MLE Results',
+     ylab='MLE',xlab='Starting Point')
+
+##Output the whole result
+sequence <- matrix(c(1:200),ncol = 1)
+Repeat.200 <- matrix(Repeat.200, ncol = 1, byrow = TRUE)
+Group <- cbind(sequence,starting.value,Repeat.200)
+colnames(Group) <- c('Sequence','Starting','MLE')
+print(Group)
+
+##Divide the whole result into groups
+Group.1 <- Group[c(1:11), ]
+Group.2 <- Group[c(12:13), ]
+Group.3 <- Group[c(14:18), ]
+Group.4 <- Group[c(19:24), ]
+Group.5 <- Group[25, ]
+Group.6 <- Group[c(26:29), ]
+Group.7 <- Group[30, ]
+Group.8 <- Group[c(31:54), ]
+Group.9 <- Group[55, ]
+Group.10 <- Group[c(56:74), ]
+Group.11 <- Group[c(75:116), ]
+Group.12 <- Group[c(117:162), ]
+Group.13 <- Group[c(163:170), ]
+Group.14 <- Group[c(171:172), ]
+Group.15 <- Group[c(173:178), ]
+Group.16 <- Group[c(179:180), ]
+Group.17 <- Group[c(181:195), ]
+Group.18 <- Group[c(196:200), ]
+
+Group.1 
+Group.2
+Group.3 
+Group.4 
+t(Group.5)
+Group.6 
+t(Group.7)
+Group.8 
+t(Group.9)
+Group.10 
+Group.11 
+Group.12 
+Group.13 
+Group.14 
+Group.15 
+Group.16 
+Group.17 
+Group.18
+
+```

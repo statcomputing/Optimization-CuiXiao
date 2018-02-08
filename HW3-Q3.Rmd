@@ -1,0 +1,103 @@
+---
+title: "HW2-Q3"
+author: "Xiao Cui"
+date: "2018/2/7"
+output:
+  pdf_document: default
+  html_document: default
+  documentclass: article
+fontsize: 11pt
+---
+####Q3 a
+```{r, echo = FALSE,warning = FALSE}
+####Q3 a
+library(car)
+
+days <- c(0,8,28,41,63,69,97,117,135,154)
+beetles <- c(2,47,192,256,768,896,1120,896,1184,1024)
+
+plot(days,beetles)
+
+## Since K is the parameter that represents the population carrying capacity,and the number of beetles decreased from 1120 to 896 at 117days and from 1184 to 1024 at 154days, we could assume the start value of K is 1200.
+K.estimate <- 1200
+
+r.raw <- array()
+for (i in 2:length(days)){
+  r.raw[i] <- (beetles[i]-beetles[i-1])/((days[i]-days[i-1])*beetles[i]*(1-beetles[i]/K.estimate))
+}
+r.estimate <- mean(r.raw[2:10])  
+## mean of r is 0.1542,which is a good starting point
+
+data.beetles <- data.frame(days,beetles)
+
+model.beetles <- nls(beetles ~ K*2/(2+(K-2)*exp((-R)*days)),
+                 start = list(K = 1200, R = 0.1542),
+                 data = data.beetles)
+summary(model.beetles)
+
+par(mfrow = c(1,1))
+plot(days,beetles)
+lines(days,predict(model.beetles))
+##The graph shows that the model suits the value well
+
+
+print(cor(beetles,predict(model.beetles)))
+##The correlation coefficient between real value and the estimated value is as high as 0.9836
+
+```
+##The graph shows that the model suits the value well
+##The correlation coefficient between real value and the estimated value is as high as 0.9836
+
+####Q3 b
+```{r, echo = FALSE,warning = FALSE}
+####Q3 b
+##Define the function to calculate SSE
+error <- function(K,R){
+  return(sum((beetles-2*K/(2+(K-2)*exp(-R*days)))^2))
+}
+
+##Define the range of K and R
+z <- matrix(0,100,100,byrow=T)
+K <- seq(0,1400,length.out = 100)
+R <- seq(0.01,0.3,length.out = 100)
+for (i in 1:length(K)){
+  for (j in 1:length(R)){
+    z[i,j] <-error(K[i],R[j])
+  }
+}
+
+##Plot the contour graph
+contour(z)
+
+```
+
+####Q3 C
+```{r, echo = FALSE,warning = FALSE}
+####Q3 C
+
+log_beetles <- function(theta, N, days) {
+               K <- theta[1]
+               r <- theta[2]
+               sigma <- theta[3]
+               t <- days
+               mean.beetles <- log((K*2)/(2+(K-2)*exp(-r*t)))
+               - sum(dnorm(log(N), mean.beetles, sigma, log = TRUE))
+}
+
+sqrt(var(log(data.beetles$beetles)))  
+##Starting point of sigma is 2.0318
+
+theta.start <- c(1200, 0.17,2.03)
+log.beetles <- nlm(log_beetles, theta.start, 
+           N=data.beetles$beetles,days=data.beetles$days,hessian = TRUE)
+print(log.beetles)
+theta.best <- log.beetles$estimate
+## K = 820.3811422 , r = 0.1926394, sigma = 0.6440836
+print(theta.best)
+
+hess <- log.beetles$hessian
+print(hess)
+var.matrix <- solve(hess)
+diag(var.matrix)
+
+```
